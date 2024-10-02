@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "projectId": "1c8a1b98-6386-43ff-9ac2-dfc886a3fa7e",
+    "name": "Agri Robot",
+    "slug": "agri-robot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "notification": {
+        "icon": "./assets/icon.png",
+        "color": "#FFFFFF",
+        "androidMode": "default",
+        "priority": "high"
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.dawitmengistu.CarApp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "83a0fb0c-cb67-49c0-8a3a-17eaa4bae355"
+      }
+    },
+    "owner": "dawitmengistu"
+  }
+}
