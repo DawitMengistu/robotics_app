@@ -18,7 +18,7 @@ export default function App() {
   const [lightReading, setLightReading] = useState(0);
   const [status, setStatus] = useState(false)
   const [loadingData, setLoadingData] = useState(false)
-  const [ipAddress, setIpAddress] = useState("http://192.168.8.120");
+  const [ipAddress, setIpAddress] = useState("http://192.168.8.119");
 
   const handleIpInput = (text) => {
     setIpAddress(text); // Update the IP address state
@@ -40,7 +40,7 @@ export default function App() {
 
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out")), 30000) // 5 seconds timeout
+        setTimeout(() => reject(new Error("Request timed out")), 20000) // 5 seconds timeout
       );
 
       try {
@@ -80,17 +80,31 @@ export default function App() {
 
   // Fetch data from the URL
   const fetchData = async () => {
+    const controller = new AbortController(); // Create an AbortController to cancel fetch if timeout occurs
+    const timeout = 10000; // Set the timeout duration (e.g., 5000ms = 5 seconds)
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => {
+        controller.abort(); // Abort the fetch request after the timeout
+        reject(new Error('Request timed out')); // Reject with an error message
+      }, timeout)
+    );
+
     try {
       console.log(ipAddress + ":5000/data");
-      const response = await fetch(ipAddress + ":5000/data");
+
+      // Use Promise.race to race between fetch and the timeout
+      const response = await Promise.race([
+        fetch(ipAddress + ":5000/data", { signal: controller.signal }),
+        timeoutPromise
+      ]);
 
       // Check if the response is OK
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.log(`HTTP error! status: ${response.status}`);
       }
 
       const rawText = await response.text(); // Get the raw text
-      // console.log('Raw Response:', rawText); // Log raw response for inspection
 
       // Clean the raw text
       const cleanedText = rawText.replace(/[\u0000-\u001F%]/g, ''); // Remove control characters and %
@@ -99,45 +113,45 @@ export default function App() {
       try {
         const jsonData = JSON.parse(cleanedText); // Parse the cleaned text as JSON
         if (jsonData.length > 0) {
-
           const newBarData = []; // Temporary array to hold new bar data
 
           for (let i = 0; i < jsonData.length; i += 2) {
-            if (jsonData[i + 1]) { // Check if the next element exists
-              // Get the values from jsonData and convert them to numbers
+            if (jsonData[i + 1]) {
               const pValue = parseFloat(jsonData[i].split(" ")[0]); // Ensure it's a number
               const mValue = parseFloat(jsonData[i + 1].split(" ")[2]); // Ensure it's a number
 
-              console.log(pValue, mValue)
-              // Push the new formatted objects to newBarData
-              newBarData.push({ value: mValue + 1, label: 'P' + (i / 2 + 1) + '-M', frontColor: '#F07368' }); // M value first
-              newBarData.push({ value: pValue, label: 'P' + (i / 2 + 1) + '-T', }); // T value second
+              newBarData.push({ value: mValue + 1, label: 'P' + (i / 2 + 1) + '-M', frontColor: '#F07368' }); // M value
+              newBarData.push({ value: pValue, label: 'P' + (i / 2 + 1) + '-T' }); // T value
             }
           }
 
           // Update the state
           setBarData(newBarData); // Update state with the new bar data
           setStatus(true);
+          setEnglish("You can now get support!");
 
         } else {
-          setBarData([])
-          setStatus(true);
+          setBarData([]);
+          setStatus(false);
         }
-
 
       } catch (error) {
         console.log('Error parsing JSON:', error);
+        setEnglish("Something went wrong!" + ipAddress + error.message + " " + Date.now());
       }
     } catch (error) {
-      console.log('Error fetching data:', error);
-      setStatus(true);
+      // Log the error or timeout
+      if (error.message) {
+        setEnglish(ipAddress + error.message + " " + Date.now());
+      }
+      setStatus(false);
     }
   };
 
   // Call fetchData when the component mounts
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 10000); // Fetch data every 10 seconds (adjust as needed)
+    const intervalId = setInterval(fetchData, 20000); // Fetch data every 10 seconds (adjust as needed)
 
     return () => clearInterval(intervalId); // Cleanup on component unmount
   }, []);
@@ -379,14 +393,14 @@ const styles = StyleSheet.create({
   status: {
     width: 10,
     height: 10,
-    backgroundColor: "#35984F",
+    backgroundColor: "#F07368",
     position: "absolute",
     top: 40,
     right: 30,
     borderRadius: 20
   },
   statusLive: {
-    backgroundColor: "#F07368"
+    backgroundColor: "#35984F"
   },
   button: {
     width: "auto",

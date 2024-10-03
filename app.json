@@ -16,6 +16,7 @@
       "supportsTablet": true
     },
     "android": {
+      "usesCleartextTraffic": true,
       "notification": {
         "icon": "./assets/icon.png",
         "color": "#FFFFFF",
